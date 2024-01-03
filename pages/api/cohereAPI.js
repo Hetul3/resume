@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     token: "RF4XtWf39euBZkjDASGCpCL47HATXboOCOVIsyWj",
   });
 
-  const usedTechnologies = "";
+  let usedTechnologies = "";
 
   try {
     const maxTokensJob = 50;
