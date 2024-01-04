@@ -59,7 +59,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const maxTokens = 100;
+    const maxTokens = 150;
 
     const promptsGeneration = prompts.map(async (prompt) => {
       const generate = await cohere.generate({
