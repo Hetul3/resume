@@ -17,23 +17,24 @@ export default function Home() {
     //removed summary
     skills: ["JavaScript", "Python", "React", "Node.js"],
     //added technical skills
-    technicalSkills: [{
-      title: "Languages",
-      skills: "Java, Python, C/C++, SQL, JS, HTML/CSS, R"
-    }, 
-    {
-      title: "Frameworks",
-      skills: "React Nodejs, Flask, JUnit, WordPress, Material-UI, FastAPI" ,  
-    }, 
-    {
-      title: "Libraries",
-      skills: "pandas, NumPy, Matplotlib"
-    }, 
-    {
-      title: "Soft-Skills",
-      skills: "communication, teamwork, responsibility, driven, passionate"
-    }
-  ],
+    technicalSkills: [
+      {
+        title: "Languages",
+        skills: "Java, Python, C/C++, SQL, JS, HTML/CSS, R",
+      },
+      {
+        title: "Frameworks",
+        skills: "React Nodejs, Flask, JUnit, WordPress, Material-UI, FastAPI",
+      },
+      {
+        title: "Libraries",
+        skills: "pandas, NumPy, Matplotlib",
+      },
+      {
+        title: "Soft-Skills",
+        skills: "communication, teamwork, responsibility, driven, passionate",
+      },
+    ],
     education: [
       {
         title: "Southwestern University",
@@ -55,7 +56,36 @@ export default function Home() {
         title: "Software Developer",
         company: "Tech Solutions Inc.",
         date: "Jan 2019 - Present",
-        location: "Waterloo, ON",
+        description: [
+          "Developed web applications using React.js and Node.js.",
+          "Collaborated with cross-functional teams to deliver high-quality software products.",
+          "Resolved technical issues and optimized application performance.",
+        ],
+      },
+      {
+        title: "Software Developer",
+        company: "Tech Solutions Inc.",
+        date: "Jan 2019 - Present",
+        description: [
+          "Developed web applications using React.js and Node.js.",
+          "Collaborated with cross-functional teams to deliver high-quality software products.",
+          "Resolved technical issues and optimized application performance.",
+        ],
+      },
+      {
+        title: "Software Developer",
+        company: "Tech Solutions Inc.",
+        date: "Jan 2019 - Present",
+        description: [
+          "Developed web applications using React.js and Node.js.",
+          "Collaborated with cross-functional teams to deliver high-quality software products.",
+          "Resolved technical issues and optimized application performance.",
+        ],
+      },
+      {
+        title: "Software Developer",
+        company: "Tech Solutions Inc.",
+        date: "Jan 2019 - Present",
         description: [
           "Developed web applications using React.js and Node.js.",
           "Collaborated with cross-functional teams to deliver high-quality software products.",
@@ -66,7 +96,6 @@ export default function Home() {
         title: "Information Technology Support Specialist",
         company: "Southwestern University",
         date: "Jun 2017 - Dec 2018",
-        location: "Waterloo, ON",
         description: [
           "Built responsive and interactive user interfaces using HTML, CSS, and JavaScript.",
           "Worked closely with designers to implement UI/UX designs.",
@@ -77,7 +106,6 @@ export default function Home() {
         title: "Intern",
         company: "Innovative Solutions Ltd.",
         date: "May 2016 - Aug 2016",
-        location: "Waterloo, ON",
         description: [
           "Explored Methods to generate video game dungeons based off of The Legened of Zelda",
           "Developed a game in Java to test the generated dungeons",
@@ -123,6 +151,113 @@ export default function Home() {
       },
     ],
   });
+
+  const createPDF = async () => {
+    const doc = new jsPDF("p", "pt", "letter");
+    const margin = 20;
+    const startY = 0;
+    const lineWidth = doc.internal.pageSize.getWidth() - margin * 2;
+
+    doc.setFont("times", "Roman");
+
+    // Header
+    const nameText = "John Doe";
+    doc.setFontSize(20);
+    const textWidth =
+      doc.getStringUnitWidth(nameText) * doc.internal.getFontSize();
+    const startX = (lineWidth - textWidth) / 2 + margin;
+    doc.text(nameText, startX, 35);
+    doc.setFontSize(12);
+
+    // User information - Contact details
+    const contactInfo = [
+      "123 Tech Street, Techville",
+      "john@example.com",
+      "123-456-7890",
+    ];
+    const infoHeight = 15;
+    const infoY = 0;
+
+    // Concatenate and center-align contact information
+    const concatenatedInfo = contactInfo.join(" | ");
+    const concatenatedWidth =
+      doc.getStringUnitWidth(concatenatedInfo) * doc.internal.getFontSize();
+    const concatenatedX = (lineWidth - concatenatedWidth) / 2 + margin;
+    doc.text(
+      concatenatedInfo,
+      concatenatedX,
+      infoY + infoHeight * contactInfo.length + 10
+    ); 
+
+    // Experience section
+    doc.setFontSize(16);
+    doc.text("Experience", margin, startY + 80); 
+    doc.setLineWidth(1);
+    doc.line(margin, startY + 85, lineWidth + margin, startY + 85); 
+    doc.setFontSize(12);
+    let expY = startY + 100; 
+
+    testing.experience.forEach((exp) => {
+      doc.setFont("bold");
+      doc.text(`${exp.title} - ${exp.company}`, margin, expY);
+      doc.setFont("italic");
+      const dateText = `${exp.date}`;
+      const dateWidth =
+        doc.getStringUnitWidth(dateText) * doc.internal.getFontSize();
+      const dateX = lineWidth - dateWidth + margin;
+      doc.text(`${exp.date}`, dateX, expY);
+      doc.setFont("normal");
+      doc.setFontSize(10);
+      doc.text(`${exp.company}`, margin, expY + 15); 
+      doc.setFontSize(12);
+
+      expY += 30; 
+
+      exp.description.forEach((desc) => {
+        doc.text("•", margin + 10, expY); 
+        doc.text(`${desc}`, margin + 20, expY);
+        expY += 15; 
+      });
+
+      expY += 15; 
+    });
+
+    // Projects section
+    doc.setFontSize(16);
+    doc.text("Projects", margin, expY + 10); 
+    doc.setLineWidth(1);
+    doc.line(margin, expY + 15, lineWidth + margin, expY + 15); 
+    doc.setFontSize(12);
+    let projectY = expY + 30; 
+
+    testing.projects.forEach((project) => {
+      doc.setFont("bold");
+      doc.text(`${project.title}`, margin, projectY);
+      doc.setFont("normal");
+
+      doc.setFontSize(10); 
+      doc.text(`${project.technology}`, margin, projectY + 15); 
+      doc.setFontSize(12);
+
+      const dateText = `${project.date}`;
+      const dateWidth =
+        doc.getStringUnitWidth(dateText) * doc.internal.getFontSize();
+      const dateX = lineWidth - dateWidth + margin;
+      doc.text(dateText, dateX, projectY); 
+
+      projectY += 30; 
+
+      project.description.forEach((desc) => {
+        doc.text("•", margin + 10, projectY); 
+        doc.text(`${desc}`, margin + 20, projectY); 
+        projectY += 15; 
+      });
+
+      projectY += 15; 
+    });
+
+    doc.save("tech_resume.pdf");
+  };
 
   const [resumeData, setResumeData] = useState({
     name: "John Doe",
@@ -377,7 +512,7 @@ export default function Home() {
     <div>
       <h1>Generate Text</h1>
 
-      <button onClick={generatePDF}>Generate PDF</button>
+      <button onClick={createPDF}>Generate PDF</button>
       {experienceText.map((value, index) => (
         <div key={index}>
           <input
