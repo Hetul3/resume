@@ -5,8 +5,8 @@ export default function Home() {
   const [inputText, setInputText] = useState([""]);
   const [jobDescription, setJobDescription] = useState("");
   const [experienceText, setExperienceText] = useState([""]);
-  const [generatedText, setGeneratedText] = useState("");
-  const [generatedExperience, setGeneratedExperience] = useState("");
+  const [generatedText, setGeneratedText] = useState([]);
+  const [generatedExperience, setGeneratedExperience] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
 
   const [testing, setTesting] = useState({
@@ -222,19 +222,19 @@ export default function Home() {
 
     // Technical Skills section
     doc.setFontSize(16);
-    doc.text("Technical Skills", margin, projectY + 10); 
+    doc.text("Technical Skills", margin, projectY + 10);
     doc.setFontSize(12);
     doc.setLineWidth(1);
-    doc.line(margin, projectY + 15, lineWidth + margin, projectY + 15); 
+    doc.line(margin, projectY + 15, lineWidth + margin, projectY + 15);
 
-    let techSkillsY = projectY + 30; 
+    let techSkillsY = projectY + 30;
 
     testing.technicalSkills.forEach((techSkill) => {
       doc.setFont("bold");
       doc.text(`${techSkill.title}`, margin, techSkillsY);
       doc.setFont("normal");
-      doc.text(`| ${techSkill.skills}`, margin + 70, techSkillsY); 
-      techSkillsY += 15; 
+      doc.text(`| ${techSkill.skills}`, margin + 70, techSkillsY);
+      techSkillsY += 15;
     });
 
     doc.save("tech_resume.pdf");
@@ -309,47 +309,25 @@ export default function Home() {
 
       console.log(data);
 
-      if (data && data.prompts && data.experience) {
-        const formattedTextArray = [];
-        const formattedExperienceArray = [];
-
-        data.prompts.forEach((item, index) => {
-          const formattedText = item?.generations?.[0]?.text || "";
-          const bulletPoints = formattedText
-            .split("^")
-            .filter((point) => point.trim() !== "");
-          formattedTextArray.push(
-            bulletPoints
-              .map((point) => point.trim())
-              .filter(Boolean)
-              .join("\n")
-          );
-
-          const formattedExperience =
-            data.experience[index]?.generations?.[0]?.text || "";
-          const expBulletPoints = formattedExperience
-            .split("^")
-            .filter((point) => point.trim() !== "");
-          formattedExperienceArray.push(
-            expBulletPoints
-              .map((point) => point.trim())
-              .filter(Boolean)
-              .join("\n")
-          );
-        });
-
-        setGeneratedText(formattedTextArray);
-        setGeneratedExperience(formattedExperienceArray);
+      if (
+        data &&
+        Array.isArray(data.prompts) &&
+        Array.isArray(data.experience)
+      ) {
+        setGeneratedText(data.prompts);
+        setGeneratedExperience(data.experience);
         setErrorMessage("");
       } else {
         setGeneratedExperience([]);
         setGeneratedText([]);
-        setErrorMessage("no generated text recieved");
+        setErrorMessage("No generated text received");
       }
+      console.log(generatedExperience);
+      console.log(generatedText);
     } catch (error) {
       console.error(error);
-      setGeneratedText("");
-      setGeneratedExperience("");
+      setGeneratedText([]);
+      setGeneratedExperience([]);
       setErrorMessage("Error fetching generated text");
     }
   };
@@ -396,25 +374,34 @@ export default function Home() {
       <button onClick={handleSubmit}>Submit</button>
 
       {/* Display generated text */}
-      {generatedText.length > 0 && (
+      {/* {generatedText.length > 0 && (
         <div>
           <h2>Generated Text</h2>
-          {generatedText.map((text, index) => (
-            <pre key={index}>{text}</pre>
+          {generatedText.map((textArray, index) => (
+            <div key={index}>
+              <h3>Text {index + 1}</h3>
+              {textArray.map((text, idx) => (
+                <p key={idx}>{text}</p>
+              ))}
+            </div>
           ))}
         </div>
-      )}
+      )} */}
 
       {/* Display generated experiences */}
-      {generatedExperience.length > 0 && (
+      {/* {generatedExperience.length > 0 && (
         <div>
           <h2>Generated Experience</h2>
-          {generatedExperience.map((text, index) => (
-            <pre key={index}>{text}</pre>
+          {generatedExperience.map((expArray, index) => (
+            <div key={index}>
+              <h3>Experience {index + 1}</h3>
+              {expArray.map((text, idx) => (
+                <p key={idx}>{text}</p>
+              ))}
+            </div>
           ))}
         </div>
-      )}
-
+      )} */}
       {errorMessage && <p>{errorMessage}</p>}
     </div>
   );
