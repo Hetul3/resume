@@ -13,9 +13,7 @@ function extractBulletPoints(text) {
       }
       currentBullet = trimmedLine.substring(2);
     } else if (trimmedLine === "%") {
-      if (currentBullet !== "") {
-        bulletPoints.push(currentBullet.trim());
-      }
+      bulletPoints.push(currentBullet.trim());
       break;
     } else if (currentBullet !== "") {
       currentBullet += ` ${trimmedLine}`;
@@ -98,7 +96,7 @@ export default async function handler(req, res) {
 
     const experienceGeneration = experience.map(async (exp) => {
       const generate = await cohere.generate({
-        prompt: `Use the provided software project description to generate tech resume bullet points for someone showcasing this project on their resume: "${exp.trim()}". Generate 3 bullet points with a maximum of 15 words each in the style of a tech resume, highlight the key aspects of the project and omit any unnecessary details. Ensure a concise tech resume style, emphasizing the tech stack, user features, and project uniqueness. Highlight with one bullet point what the project is in less than 15 words, with the second bullet point highlight the technologies used in less than 15 words and with the third bullet point highlight something impressive about the project or another technology used in less than 15 words. Make sure to resemble the result to that of a tech resume along with using third person and don't refer to the project. Replace the bullet of the bullet points with *. At the end of all three bullet points, write % to show that the bullet points are done. Cater bullet points and information to best fit the technologies highlighted for a job description provided here: "${usedTechnologies}", making sure to include the technologies highlighted in the job description if they are in the project. Ensure no speculative data or content that is not explicitly mentioned in the project description is never included. The result must be in bullet point. After the three bullet points, write % to show that it is done.`,
+        prompt: `Use the provided software experience description to generate tech resume bullet points for someone showcasing this project on their resume: "${exp.trim()}". Generate 3 bullet points with a maximum of 15 words each in the style of a tech resume, highlight the key aspects of the project and omit any unnecessary details. Ensure a concise tech resume style, emphasizing the tech stack, user features, and experience uniqueness. Highlight with one bullet point what was accomplished in the experience in less than 20 words, with the second bullet point highlight the technologies used in less than 20 words and with the third bullet point highlight something impressive about the experience or results achieved used in less than 20 words. Make sure to resemble the result to that of a tech resume along with not using pronouns and don't refer to the project. Replace the bullet of the bullet points with *. At the end of all three bullet points, write % to show that the bullet points are done. Cater bullet points and information to best fit the technologies highlighted for a job description provided here: "${usedTechnologies}", making sure to include the technologies highlighted in the job description if they are in the project. Ensure no speculative data or content that is not explicitly mentioned in the project description is never included. The result must be in bullet point. After the three bullet points, write % to show that it is done.`,
         model: "command-nightly",
         maxTokens: maxTokens,
         temperature: 0.9,

@@ -2,118 +2,53 @@ import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 
 export default function Home() {
-  const [inputText, setInputText] = useState([""]);
+  const [inputText, setInputText] = useState([]);
   const [jobDescription, setJobDescription] = useState("");
-  const [experienceText, setExperienceText] = useState([""]);
+  const [experienceText, setExperienceText] = useState([]);
   const [generatedText, setGeneratedText] = useState([]);
   const [generatedExperience, setGeneratedExperience] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [experienceInfo, setExperienceInfo] = useState([
+    { title: "", company: "", date: "", description: "" },
+  ]);
+  const [projectInfo, setProjectInfo] = useState([
+    { title: "", technology: "", date: "", description: "" },
+  ]);
+  const [technicalInfo, setTechnicalInfo] = useState([
+    { title: "", description: "" },
+  ]);
+  const [userInfo, setuserInfo] = useState({
+    name: "",
+    address: "",
+    email: "",
+    number: "",
+  });
+  const [educationInfo, setEducationInfo] = useState([
+    { university: "", date: "", degree: "" },
+  ]);
 
   const [testing, setTesting] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "123-456-7890",
-    address: "123 Tech Street, Techville",
-    skills: ["JavaScript", "Python", "React", "Node.js"],
-    technicalSkills: [
-      {
-        title: "Languages",
-        skills: "Java, Python, C/C++, SQL, JS, HTML/CSS, R",
-      },
-      {
-        title: "Frameworks",
-        skills: "React Nodejs, Flask, JUnit, WordPress, Material-UI, FastAPI",
-      },
-      {
-        title: "Libraries",
-        skills: "pandas, NumPy, Matplotlib",
-      },
-    ],
-    education: [
-      {
-        title: "Southwestern University",
-        major: "Backhelor of Arts in Computer Science, Minor in Business",
-        location: "Georgetown, TX",
-        data: "Aug 2018 - May 2021",
-      },
-      {
-        title: "Waterloo Univeristy",
-        major: "Honours in Computer and Electrical Engineering",
-        location: "Waterloo, ON",
-        data: "Aug 2014 - May 2018",
-      },
-    ],
-
-    //added location
-    experience: [
-      {
-        title: "Software Developer",
-        company: "Tech Solutions Inc.",
-        date: "Jan 2019 - Present",
-        description: [
-          "Developed web applications using React.js and Node.js.",
-          "Collaborated with cross-functional teams to deliver high-quality software products.",
-          "Resolved technical issues and optimized application performance.",
-        ],
-      },
-      {
-        title: "Information Technology Support Specialist",
-        company: "Southwestern University",
-        date: "Jun 2017 - Dec 2018",
-        description: [
-          "Built responsive and interactive user interfaces using HTML, CSS, and JavaScript.",
-          "Worked closely with designers to implement UI/UX designs.",
-          "Performed code reviews and provided technical guidance to junior developers.",
-        ],
-      },
-      {
-        title: "Intern",
-        company: "Innovative Solutions Ltd.",
-        date: "May 2016 - Aug 2016",
-        description: [
-          "Explored Methods to generate video game dungeons based off of The Legened of Zelda",
-          "Developed a game in Java to test the generated dungeons",
-          "Contributed 50K+ lines of code to an established codebase via Git",
-          "Conducted a human subject study to determine which video game dungeon generation technique is enjoyable",
-          "Wrote an 8-page paper and gave multiple presentations on-campus",
-          "Presented virtually to the World Conference on Computational Intelligence",
-        ],
-      },
-    ],
-
-    //added date and technology
-    projects: [
-      {
-        title: "E-commerce Website",
-        technology: "Python, Flask, React, PostgresSQL, Docker",
-        date: "June 2020 - July 2020",
-        description: [
-          "Developed a fullstack web application using with Flask serving a REST API with React as the frontend",
-          "Implemented GitHub OAuth to get data from user's repositories",
-          "Visualized GitHub data to show collaboration",
-          "Used Celery and Redis for asynchronous tasks",
-        ],
-      },
-      {
-        title: "Portfolio Website",
-        technology: "Python, Flask, React, PostgresSQL, Docker",
-        date: "June 2020 - July 2020",
-        description: [
-          "Designed and developed a personal portfolio website using HTML, CSS, and JavaScript.",
-          "Showcased projects, skills, and contact information.",
-        ],
-      },
-      {
-        title: "Inventory Management System",
-        technology: "Python, Flask, React, PostgresSQL, Docker",
-        date: "June 2020 - July 2020",
-        description: [
-          "Created an inventory management system with CRUD functionalities using Node.js and MongoDB.",
-          "Collaborated with Minecraft server adminstrators to suggest features and get feedback about the plugins",
-          "Published plugin to website gaining 2K+ downloads and an average 4.5/5-star review",
-        ],
-      },
-    ],
+    education: educationInfo.map((info) => ({
+      university: info.university,
+      date: info.date,
+      degree: info.degree,
+    })),
+    experience: experienceInfo.map((info, index) => ({
+      title: info.title,
+      company: info.company,
+      date: info.date,
+      description: generatedExperience[index] || "",
+    })),
+    projects: projectInfo.map((info, index) => ({
+      title: info.title,
+      technology: info.technology,
+      date: info.date,
+      description: generatedText[index] || "",
+    })),
+    technicalSkills: technicalInfo.map((info) => ({
+      title: info.title,
+      description: info.description,
+    })),
   });
 
   const createPDF = async () => {
@@ -125,7 +60,7 @@ export default function Home() {
     doc.setFont("times", "Roman");
 
     // Header
-    const nameText = "John Doe";
+    const nameText = userInfo.name;
     doc.setFontSize(20);
     const textWidth =
       doc.getStringUnitWidth(nameText) * doc.internal.getFontSize();
@@ -134,11 +69,7 @@ export default function Home() {
     doc.setFontSize(12);
 
     // User information - Contact details
-    const contactInfo = [
-      "123 Tech Street, Techville",
-      "john@example.com",
-      "123-456-7890",
-    ];
+    const contactInfo = [userInfo.address, userInfo.email, userInfo.number];
     const infoHeight = 15;
     const infoY = 0;
 
@@ -153,15 +84,42 @@ export default function Home() {
       infoY + infoHeight * contactInfo.length + 10
     );
 
+    // Education section
+    doc.setFontSize(16);
+    doc.text("Education", margin, infoY + 100);
+    doc.setLineWidth(1);
+    doc.line(margin, infoY + 105, lineWidth + margin, infoY + 105);
+    doc.setFontSize(12);
+    let eduY = infoY + 120;
+
+    educationInfo.forEach((edu, index) => {
+      doc.setFont("bold");
+      doc.text(`${edu.university}`, margin, eduY);
+
+      const dateText = `${edu.date}`;
+      const dateWidth =
+        doc.getStringUnitWidth(dateText) * doc.internal.getFontSize();
+      const dateX = lineWidth - dateWidth + margin;
+
+      doc.setFont("italic");
+      doc.text(`${edu.date}`, dateX, eduY);
+      doc.setFont("normal");
+      doc.setFontSize(10);
+      doc.text(`${edu.degree}`, margin, eduY + 15);
+      doc.setFontSize(12);
+
+      eduY += 30; // Move to the next section
+    });
+
     // Experience section
     doc.setFontSize(16);
-    doc.text("Experience", margin, startY + 80);
+    doc.text("Experience", margin, eduY + 10);
     doc.setLineWidth(1);
-    doc.line(margin, startY + 85, lineWidth + margin, startY + 85);
+    doc.line(margin, eduY + 15, lineWidth + margin, eduY + 15);
     doc.setFontSize(12);
-    let expY = startY + 100;
+    let expY = eduY + 30;
 
-    testing.experience.forEach((exp) => {
+    experienceInfo.forEach((exp, index) => {
       doc.setFont("bold");
       doc.text(`${exp.title}`, margin, expY);
       doc.setFont("italic");
@@ -177,11 +135,25 @@ export default function Home() {
 
       expY += 30;
 
-      exp.description.forEach((desc) => {
-        doc.text("•", margin + 10, expY);
-        doc.text(`${desc}`, margin + 20, expY);
-        expY += 15;
-      });
+      const generatedExp = generatedExperience[index];
+      if (generatedExp && generatedExp.length > 0) {
+        generatedExp.forEach((desc) => {
+          const descLines = doc.splitTextToSize(desc, lineWidth - 40);
+          let isFirstLine = true;
+          descLines.forEach((line) => {
+            if (expY > doc.internal.pageSize.height - 20) {
+              doc.addPage();
+              expY = 40; // Reset Y-coordinate for a new page
+            }
+            if (isFirstLine) {
+              doc.text("•", margin + 10, expY);
+              isFirstLine = false;
+            }
+            doc.text(line, margin + 20, expY);
+            expY += 15;
+          });
+        });
+      }
 
       expY += 15;
     });
@@ -194,7 +166,7 @@ export default function Home() {
     doc.setFontSize(12);
     let projectY = expY + 30;
 
-    testing.projects.forEach((project) => {
+    projectInfo.forEach((project, index) => {
       doc.setFont("bold");
       doc.text(`${project.title}`, margin, projectY);
       doc.setFont("normal");
@@ -211,11 +183,25 @@ export default function Home() {
 
       projectY += 30;
 
-      project.description.forEach((desc) => {
-        doc.text("•", margin + 10, projectY);
-        doc.text(`${desc}`, margin + 20, projectY);
-        projectY += 15;
-      });
+      const generatedProj = generatedText[index];
+      if (generatedProj && generatedProj.length > 0) {
+        generatedProj.forEach((desc) => {
+          const descLines = doc.splitTextToSize(desc, lineWidth - 40);
+          let isFirstLine = true;
+          descLines.forEach((line) => {
+            if (projectY > doc.internal.pageSize.height - 20) {
+              doc.addPage();
+              projectY = 40; // Reset Y-coordinate for a new page
+            }
+            if (isFirstLine) {
+              doc.text("•", margin + 10, projectY);
+              isFirstLine = false;
+            }
+            doc.text(line, margin + 20, projectY);
+            projectY += 15;
+          });
+        });
+      }
 
       projectY += 15;
     });
@@ -227,21 +213,89 @@ export default function Home() {
     doc.setLineWidth(1);
     doc.line(margin, projectY + 15, lineWidth + margin, projectY + 15);
 
-    let techSkillsY = projectY + 30;
+    let techSkillsY = projectY + 15;
 
-    testing.technicalSkills.forEach((techSkill) => {
+    technicalInfo.forEach((techSkill, index) => {
       doc.setFont("bold");
-      doc.text(`${techSkill.title}`, margin, techSkillsY);
+      const textToDisplay = `${techSkill.title} | ${techSkill.description}`;
+      const textLines = doc.splitTextToSize(
+        textToDisplay,
+        lineWidth - margin * 2
+      );
+
       doc.setFont("normal");
-      doc.text(`| ${techSkill.skills}`, margin + 70, techSkillsY);
-      techSkillsY += 15;
+      textLines.forEach((line, i) => {
+        if (techSkillsY + (i + 1) * 15 > doc.internal.pageSize.height - 20) {
+          doc.addPage();
+          techSkillsY = 40; // Reset Y-coordinate for a new page
+        }
+        doc.text(line, margin, techSkillsY + 15 * (i + 1));
+      });
+
+      techSkillsY += textLines.length * 15; // Adjust based on line height
     });
 
     doc.save("tech_resume.pdf");
   };
 
-  const handleAddField = () => {
-    setInputText([...inputText, ""]);
+  const handleAddExperienceInfo = () => {
+    setExperienceInfo([
+      ...experienceInfo,
+      { title: "", company: "", date: "", description: "" },
+    ]);
+  };
+
+  const handleAddEducationInfo = () => {
+    setEducationInfo([
+      ...educationInfo,
+      { university: "", date: "", degree: "" },
+    ]);
+  };
+
+  const handleAddTechnicalInfo = () => {
+    setTechnicalInfo([...technicalInfo, { title: "", description: "" }]);
+  };
+
+  const handleAddProjectInfo = () => {
+    setProjectInfo([
+      ...projectInfo,
+      { title: "", technology: "", date: "", description: "" },
+    ]);
+  };
+
+  const handleUserInfoChange = (field, value) => {
+    setuserInfo({
+      ...userInfo,
+      [field]: value,
+    });
+  };
+
+  const handleExperienceChangeInfo = (index, field, value) => {
+    const newExperienceInfo = [...experienceInfo];
+    newExperienceInfo[index][field] = value;
+    setExperienceInfo(newExperienceInfo);
+    console.log(experienceInfo);
+  };
+
+  const handleEducationChangeInfo = (index, field, value) => {
+    const newEducationInfo = [...educationInfo];
+    newEducationInfo[index][field] = value;
+    setEducationInfo(newEducationInfo);
+    console.log(educationInfo);
+  };
+
+  const handleTechnicalChangeInfo = (index, field, value) => {
+    const newTechnicalInfo = [...technicalInfo];
+    newTechnicalInfo[index][field] = value;
+    setTechnicalInfo(newTechnicalInfo);
+    console.log(technicalInfo);
+  };
+
+  const handleProjectChangeInfo = (index, field, value) => {
+    const newProjectInfo = [...projectInfo];
+    newProjectInfo[index][field] = value;
+    setProjectInfo(newProjectInfo);
+    console.log(projectInfo);
   };
 
   const handleAddExperience = () => {
@@ -266,6 +320,30 @@ export default function Home() {
     console.log(inputText);
   };
 
+  const handleDeleteExperienceInfo = (index) => {
+    const newExperienceInfo = [...experienceInfo];
+    newExperienceInfo.splice(index, 1);
+    setExperienceInfo(newExperienceInfo);
+  };
+
+  const handleDeleteEducationInfo = (index) => {
+    const newEducationInfo = [...educationInfo];
+    newEducationInfo.splice(index, 1);
+    setEducationInfo(newEducationInfo);
+  };
+
+  const handleDeleteTechnicalInfo = (index) => {
+    const newTechnicalInfo = [...technicalInfo];
+    newTechnicalInfo.splice(index, 1);
+    setTechnicalInfo(newTechnicalInfo);
+  };
+
+  const handleDeleteProjectDescription = (index) => {
+    const newProjectInfo = [...projectInfo];
+    newProjectInfo.splice(index, 1);
+    setProjectInfo(newProjectInfo);
+  };
+
   const handleDeleteExperience = (index) => {
     const newExperienceText = [...experienceText];
     newExperienceText.splice(index, 1);
@@ -280,24 +358,30 @@ export default function Home() {
 
   const handleSubmit = async () => {
     if (
-      inputText.some((text) => !text.trim()) ||
+      projectInfo.some((proj) => !proj.description.trim()) ||
       !jobDescription.trim() ||
-      experienceText.some((text) => !text.trim())
+      experienceInfo.some((exp) => !exp.description.trim())
     ) {
       setErrorMessage("Fill in all text fields");
       return;
     }
 
     try {
+      const experienceDescription = experienceInfo.map(
+        (exp) => exp.description
+      );
+
+      const projectDescription = projectInfo.map((proj) => proj.description);
+
       const response = await fetch("/api/cohereAPI", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompts: inputText,
+          prompts: projectDescription,
           jobDescription: jobDescription,
-          experience: experienceText,
+          experience: experienceDescription,
         }),
       });
 
@@ -331,9 +415,36 @@ export default function Home() {
       setErrorMessage("Error fetching generated text");
     }
   };
+
   return (
     <div>
       <h1>Generate Text</h1>
+      <div>
+        <input
+          type="text"
+          value={userInfo.name}
+          onChange={(e) => handleUserInfoChange("name", e.target.value)}
+          placeholder="Enter name"
+        />
+        <input
+          type="text"
+          value={userInfo.address}
+          onChange={(e) => handleUserInfoChange("address", e.target.value)}
+          placeholder="Enter address"
+        />
+        <input
+          type="email"
+          value={userInfo.email}
+          onChange={(e) => handleUserInfoChange("email", e.target.value)}
+          placeholder="Enter email"
+        />
+        <input
+          type="tel"
+          value={userInfo.number}
+          onChange={(e) => handleUserInfoChange("number", e.target.value)}
+          placeholder="Enter phone number"
+        />
+      </div>
 
       <button onClick={createPDF}>Generate PDF</button>
       {experienceText.map((value, index) => (
@@ -346,22 +457,7 @@ export default function Home() {
           />
           <button onClick={() => handleDeleteExperience(index)}>Delete</button>
         </div>
-      ))}
-      <button onClick={handleAddExperience}>Add Text Field</button>
-
-      {inputText.map((value, index) => (
-        <div key={index}>
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => handleInputChange(index, e.target.value)}
-            placeholder={`Enter text for prompt ${index + 1}`}
-          />
-          <button onClick={() => handleDeleteField(index)}>Delete</button>
-        </div>
-      ))}
-      <button onClick={handleAddField}>Add Text Field</button>
-
+      ))} 
       <div>
         <input
           type="text"
@@ -373,35 +469,144 @@ export default function Home() {
 
       <button onClick={handleSubmit}>Submit</button>
 
-      {/* Display generated text */}
-      {/* {generatedText.length > 0 && (
-        <div>
-          <h2>Generated Text</h2>
-          {generatedText.map((textArray, index) => (
-            <div key={index}>
-              <h3>Text {index + 1}</h3>
-              {textArray.map((text, idx) => (
-                <p key={idx}>{text}</p>
-              ))}
-            </div>
-          ))}
+      {educationInfo.map((edu, index) => (
+        <div key={index}>
+          <input
+            type="text"
+            value={edu.university}
+            onChange={(e) =>
+              handleEducationChangeInfo(index, "university", e.target.value)
+            }
+            placeholder={`University ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={edu.degree}
+            onChange={(e) =>
+              handleEducationChangeInfo(index, "degree", e.target.value)
+            }
+            placeholder={`Degree ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={edu.date}
+            onChange={(e) =>
+              handleEducationChangeInfo(index, "date", e.target.value)
+            }
+            placeholder={`Date ${index + 1}`}
+          />
+          <button onClick={() => handleDeleteEducationInfo(index)}>Delete</button>
         </div>
-      )} */}
+      ))}
+      <button onClick={() => handleAddEducationInfo()}>Add Education</button>
 
-      {/* Display generated experiences */}
-      {/* {generatedExperience.length > 0 && (
-        <div>
-          <h2>Generated Experience</h2>
-          {generatedExperience.map((expArray, index) => (
-            <div key={index}>
-              <h3>Experience {index + 1}</h3>
-              {expArray.map((text, idx) => (
-                <p key={idx}>{text}</p>
-              ))}
-            </div>
-          ))}
+      {experienceInfo.map((experience, index) => (
+        <div key={index}>
+          <input
+            type="text"
+            value={experience.title}
+            onChange={(e) =>
+              handleExperienceChangeInfo(index, "title", e.target.value)
+            }
+            placeholder={`Title ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={experience.description}
+            onChange={(e) =>
+              handleExperienceChangeInfo(index, "description", e.target.value)
+            }
+            placeholder={`Description ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={experience.company}
+            onChange={(e) =>
+              handleExperienceChangeInfo(index, "company", e.target.value)
+            }
+            placeholder={`Company ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={experience.date}
+            onChange={(e) =>
+              handleExperienceChangeInfo(index, "date", e.target.value)
+            }
+            placeholder={`Date ${index + 1}`}
+          />
+          <button onClick={() => handleDeleteExperienceInfo(index)}>
+            Delete
+          </button>
         </div>
-      )} */}
+      ))}
+      <button onClick={handleAddExperienceInfo}>Add Experience</button>
+
+      {projectInfo.map((project, index) => (
+        <div key={index}>
+          <input
+            type="text"
+            value={project.title}
+            onChange={(e) =>
+              handleProjectChangeInfo(index, "title", e.target.value)
+            }
+            placeholder={`Title ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={project.technology}
+            onChange={(e) =>
+              handleProjectChangeInfo(index, "technology", e.target.value)
+            }
+            placeholder={`Technology ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={project.date}
+            onChange={(e) =>
+              handleProjectChangeInfo(index, "date", e.target.value)
+            }
+            placeholder={`Date ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={project.description}
+            onChange={(e) =>
+              handleProjectChangeInfo(index, "description", e.target.value)
+            }
+            placeholder={`Description ${index + 1}`}
+          />
+          <button onClick={() => handleDeleteProjectDescription(index)}>
+            Delete
+          </button>
+        </div>
+      ))}
+      <button onClick={handleAddProjectInfo}>Add Project</button>
+
+      {technicalInfo.map((technical, index) => (
+        <div key={index}>
+          <input
+            type="text"
+            value={technical.title}
+            onChange={(e) =>
+              handleTechnicalChangeInfo(index, "title", e.target.value)
+            }
+            placeholder={`Title ${index + 1}`}
+          />
+          <input
+            type="text"
+            value={technical.description}
+            onChange={(e) =>
+              handleTechnicalChangeInfo(index, "description", e.target.value)
+            }
+            placeholder={`Description ${index + 1}`}
+          />
+          <button onClick={() => handleDeleteTechnicalInfo(index)}>
+            Delete
+          </button>
+        </div>
+      ))}
+      <button onClick={handleAddTechnicalInfo}>Add Technical Skill</button>
+
       {errorMessage && <p>{errorMessage}</p>}
     </div>
   );
