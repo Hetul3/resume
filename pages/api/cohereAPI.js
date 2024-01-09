@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   }
 
   const cohere = new CohereClient({
-    token: "RF4XtWf39euBZkjDASGCpCL47HATXboOCOVIsyWj",
+    token: process.env.API_KEY,
   });
 
   let usedTechnologies = "";

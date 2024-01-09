@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
+import "tailwindcss/tailwind.css";
+import Image from "next/image";
 
 export default function Home() {
   const [inputText, setInputText] = useState([]);
@@ -26,30 +28,17 @@ export default function Home() {
   const [educationInfo, setEducationInfo] = useState([
     { university: "", date: "", degree: "" },
   ]);
+  const [step, setStep] = useState(1);
+  const [isGeneratePDFClickable, setIsGeneratePDFClickable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [testing, setTesting] = useState({
-    education: educationInfo.map((info) => ({
-      university: info.university,
-      date: info.date,
-      degree: info.degree,
-    })),
-    experience: experienceInfo.map((info, index) => ({
-      title: info.title,
-      company: info.company,
-      date: info.date,
-      description: generatedExperience[index] || "",
-    })),
-    projects: projectInfo.map((info, index) => ({
-      title: info.title,
-      technology: info.technology,
-      date: info.date,
-      description: generatedText[index] || "",
-    })),
-    technicalSkills: technicalInfo.map((info) => ({
-      title: info.title,
-      description: info.description,
-    })),
-  });
+  const handleNextStep = () => {
+    setStep((prevStep) => prevStep + 1);
+  };
+
+  const handlePreviousStep = () => {
+    setStep((prevStep) => prevStep - 1);
+  };
 
   const createPDF = async () => {
     const doc = new jsPDF("p", "pt", "letter");
@@ -108,7 +97,7 @@ export default function Home() {
       doc.text(`${edu.degree}`, margin, eduY + 15);
       doc.setFontSize(12);
 
-      eduY += 30; // Move to the next section
+      eduY += 30;
     });
 
     // Experience section
@@ -143,7 +132,7 @@ export default function Home() {
           descLines.forEach((line) => {
             if (expY > doc.internal.pageSize.height - 20) {
               doc.addPage();
-              expY = 40; // Reset Y-coordinate for a new page
+              expY = 40;
             }
             if (isFirstLine) {
               doc.text("•", margin + 10, expY);
@@ -191,7 +180,7 @@ export default function Home() {
           descLines.forEach((line) => {
             if (projectY > doc.internal.pageSize.height - 20) {
               doc.addPage();
-              projectY = 40; // Reset Y-coordinate for a new page
+              projectY = 40;
             }
             if (isFirstLine) {
               doc.text("•", margin + 10, projectY);
@@ -227,12 +216,12 @@ export default function Home() {
       textLines.forEach((line, i) => {
         if (techSkillsY + (i + 1) * 15 > doc.internal.pageSize.height - 20) {
           doc.addPage();
-          techSkillsY = 40; // Reset Y-coordinate for a new page
+          techSkillsY = 40;
         }
         doc.text(line, margin, techSkillsY + 15 * (i + 1));
       });
 
-      techSkillsY += textLines.length * 15; // Adjust based on line height
+      techSkillsY += textLines.length * 15;
     });
 
     doc.save("tech_resume.pdf");
@@ -298,26 +287,8 @@ export default function Home() {
     console.log(projectInfo);
   };
 
-  const handleAddExperience = () => {
-    setExperienceText([...experienceText, ""]);
-  };
-
   const handleJobDescriptionChange = (value) => {
     setJobDescription(value);
-  };
-
-  const handleExperienceChange = (index, value) => {
-    const newExperienceText = [...experienceText];
-    newExperienceText[index] = value;
-    setExperienceText(newExperienceText);
-    console.log(experienceText);
-  };
-
-  const handleInputChange = (index, value) => {
-    const newInputText = [...inputText];
-    newInputText[index] = value;
-    setInputText(newInputText);
-    console.log(inputText);
   };
 
   const handleDeleteExperienceInfo = (index) => {
@@ -344,19 +315,8 @@ export default function Home() {
     setProjectInfo(newProjectInfo);
   };
 
-  const handleDeleteExperience = (index) => {
-    const newExperienceText = [...experienceText];
-    newExperienceText.splice(index, 1);
-    setExperienceText(newExperienceText);
-  };
-
-  const handleDeleteField = (index) => {
-    const newInputText = [...inputText];
-    newInputText.splice(index, 1);
-    setInputText(newInputText);
-  };
-
   const handleSubmit = async () => {
+    setIsLoading(true);
     if (
       projectInfo.some((proj) => !proj.description.trim()) ||
       !jobDescription.trim() ||
@@ -401,10 +361,12 @@ export default function Home() {
         setGeneratedText(data.prompts);
         setGeneratedExperience(data.experience);
         setErrorMessage("");
+        setIsGeneratePDFClickable(true);
       } else {
         setGeneratedExperience([]);
         setGeneratedText([]);
         setErrorMessage("No generated text received");
+        setIsGeneratePDFClickable(false);
       }
       console.log(generatedExperience);
       console.log(generatedText);
@@ -413,199 +375,775 @@ export default function Home() {
       setGeneratedText([]);
       setGeneratedExperience([]);
       setErrorMessage("Error fetching generated text");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const LoadingIndicator = () => {
+    if (isLoading) {
+      return (
+        <div>
+          <Image src="/loading.gif" alt="Loading..." width={50} height={50} />
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div>
-      <h1>Generate Text</h1>
-      <div>
-        <input
-          type="text"
-          value={userInfo.name}
-          onChange={(e) => handleUserInfoChange("name", e.target.value)}
-          placeholder="Enter name"
-        />
-        <input
-          type="text"
-          value={userInfo.address}
-          onChange={(e) => handleUserInfoChange("address", e.target.value)}
-          placeholder="Enter address"
-        />
-        <input
-          type="email"
-          value={userInfo.email}
-          onChange={(e) => handleUserInfoChange("email", e.target.value)}
-          placeholder="Enter email"
-        />
-        <input
-          type="tel"
-          value={userInfo.number}
-          onChange={(e) => handleUserInfoChange("number", e.target.value)}
-          placeholder="Enter phone number"
-        />
-      </div>
-
-      <button onClick={createPDF}>Generate PDF</button>
-      {experienceText.map((value, index) => (
-        <div key={index}>
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => handleExperienceChange(index, e.target.value)}
-            placeholder={`Enter text prompt ${index + 1}`}
-          />
-          <button onClick={() => handleDeleteExperience(index)}>Delete</button>
+    <div className="container text-center">
+      {step === 1 && (
+        <div
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #003366, #367ff5)",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "4rem",
+              fontWeight: "bold",
+              color: "#fff",
+              backgroundImage: "linear-gradient(to right, #4facfe, #00f2fe)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Enter Contact Information
+          </h1>
+          <div
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <input
+              type="text"
+              value={userInfo.name}
+              onChange={(e) => handleUserInfoChange("name", e.target.value)}
+              placeholder="Enter name"
+              className="form-control mb-4 input-lg hover-effect"
+              style={{ height: "60px", width: "90%", marginBottom: "10px" }}
+            />
+            <input
+              type="text"
+              value={userInfo.address}
+              onChange={(e) => handleUserInfoChange("address", e.target.value)}
+              placeholder="Enter address"
+              className="form-control mb-4 input-lg hover-effect"
+              style={{ height: "60px", width: "90%", marginBottom: "10px" }}
+            />
+            <input
+              type="email"
+              value={userInfo.email}
+              onChange={(e) => handleUserInfoChange("email", e.target.value)}
+              placeholder="Enter email"
+              className="form-control mb-4 input-lg hover-effect"
+              style={{ height: "60px", width: "90%", marginBottom: "10px" }}
+            />
+            <input
+              type="tel"
+              value={userInfo.number}
+              onChange={(e) => handleUserInfoChange("number", e.target.value)}
+              placeholder="Enter phone number"
+              className="form-control mb-4 input-lg hover-effect"
+              style={{ height: "60px", width: "90%", marginBottom: "10px" }}
+            />
+            <button
+              onClick={handleNextStep}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{ height: "60px", width: "90%", marginBottom: "10px" }}
+            >
+              Next
+            </button>
+          </div>
+          {errorMessage && <p>{errorMessage}</p>}
         </div>
-      ))} 
-      <div>
-        <input
-          type="text"
-          value={jobDescription}
-          onChange={(e) => handleJobDescriptionChange(e.target.value)}
-          placeholder="Enter job description"
-        />
-      </div>
+      )}
 
-      <button onClick={handleSubmit}>Submit</button>
-
-      {educationInfo.map((edu, index) => (
-        <div key={index}>
-          <input
-            type="text"
-            value={edu.university}
-            onChange={(e) =>
-              handleEducationChangeInfo(index, "university", e.target.value)
-            }
-            placeholder={`University ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={edu.degree}
-            onChange={(e) =>
-              handleEducationChangeInfo(index, "degree", e.target.value)
-            }
-            placeholder={`Degree ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={edu.date}
-            onChange={(e) =>
-              handleEducationChangeInfo(index, "date", e.target.value)
-            }
-            placeholder={`Date ${index + 1}`}
-          />
-          <button onClick={() => handleDeleteEducationInfo(index)}>Delete</button>
+      {step === 2 && (
+        <div
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #003366, #367ff5)",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "4rem",
+              fontWeight: "bold",
+              color: "#fff",
+              backgroundImage: "linear-gradient(to right, #4facfe, #00f2fe)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Enter Education Information
+          </h1>
+          <div
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {educationInfo.map((edu, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  width: "100%",
+                  maxWidth: "500px",
+                }}
+              >
+                <input
+                  type="text"
+                  value={edu.university}
+                  onChange={(e) =>
+                    handleEducationChangeInfo(
+                      index,
+                      "university",
+                      e.target.value
+                    )
+                  }
+                  placeholder={`University ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={edu.degree}
+                  onChange={(e) =>
+                    handleEducationChangeInfo(index, "degree", e.target.value)
+                  }
+                  placeholder={`Degree ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={edu.date}
+                  onChange={(e) =>
+                    handleEducationChangeInfo(index, "date", e.target.value)
+                  }
+                  placeholder={`Date ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <button
+                  onClick={() => handleDeleteEducationInfo(index)}
+                  className="btn btn-primary btn-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => handleAddEducationInfo()}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{
+                height: "60px",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              Add Education
+            </button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              <button
+                onClick={handlePreviousStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNextStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          {errorMessage && <p>{errorMessage}</p>}
         </div>
-      ))}
-      <button onClick={() => handleAddEducationInfo()}>Add Education</button>
+      )}
 
-      {experienceInfo.map((experience, index) => (
-        <div key={index}>
-          <input
-            type="text"
-            value={experience.title}
-            onChange={(e) =>
-              handleExperienceChangeInfo(index, "title", e.target.value)
-            }
-            placeholder={`Title ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={experience.description}
-            onChange={(e) =>
-              handleExperienceChangeInfo(index, "description", e.target.value)
-            }
-            placeholder={`Description ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={experience.company}
-            onChange={(e) =>
-              handleExperienceChangeInfo(index, "company", e.target.value)
-            }
-            placeholder={`Company ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={experience.date}
-            onChange={(e) =>
-              handleExperienceChangeInfo(index, "date", e.target.value)
-            }
-            placeholder={`Date ${index + 1}`}
-          />
-          <button onClick={() => handleDeleteExperienceInfo(index)}>
-            Delete
-          </button>
+      {step === 3 && (
+        <div
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #003366, #367ff5)",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "4rem",
+              fontWeight: "bold",
+              color: "#fff",
+              backgroundImage: "linear-gradient(to right, #4facfe, #00f2fe)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Enter Experience Information
+          </h1>
+          <div
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {experienceInfo.map((experience, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  width: "100%",
+                  maxWidth: "500px",
+                }}
+              >
+                <input
+                  type="text"
+                  value={experience.title}
+                  onChange={(e) =>
+                    handleExperienceChangeInfo(index, "title", e.target.value)
+                  }
+                  placeholder={`Title ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={experience.company}
+                  onChange={(e) =>
+                    handleExperienceChangeInfo(index, "company", e.target.value)
+                  }
+                  placeholder={`Company ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={experience.date}
+                  onChange={(e) =>
+                    handleExperienceChangeInfo(index, "date", e.target.value)
+                  }
+                  placeholder={`Date ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={experience.description}
+                  onChange={(e) =>
+                    handleExperienceChangeInfo(
+                      index,
+                      "description",
+                      e.target.value
+                    )
+                  }
+                  placeholder={`Description ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <button
+                  onClick={() => handleDeleteExperienceInfo(index)}
+                  className="btn btn-primary btn-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => handleAddExperienceInfo()}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{
+                height: "60px",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              Add Experience
+            </button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              <button
+                onClick={handlePreviousStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNextStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          {errorMessage && <p>{errorMessage}</p>}
         </div>
-      ))}
-      <button onClick={handleAddExperienceInfo}>Add Experience</button>
+      )}
 
-      {projectInfo.map((project, index) => (
-        <div key={index}>
-          <input
-            type="text"
-            value={project.title}
-            onChange={(e) =>
-              handleProjectChangeInfo(index, "title", e.target.value)
-            }
-            placeholder={`Title ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={project.technology}
-            onChange={(e) =>
-              handleProjectChangeInfo(index, "technology", e.target.value)
-            }
-            placeholder={`Technology ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={project.date}
-            onChange={(e) =>
-              handleProjectChangeInfo(index, "date", e.target.value)
-            }
-            placeholder={`Date ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={project.description}
-            onChange={(e) =>
-              handleProjectChangeInfo(index, "description", e.target.value)
-            }
-            placeholder={`Description ${index + 1}`}
-          />
-          <button onClick={() => handleDeleteProjectDescription(index)}>
-            Delete
-          </button>
+      {step === 4 && (
+        <div
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #003366, #367ff5)",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "4rem",
+              fontWeight: "bold",
+              color: "#fff",
+              backgroundImage: "linear-gradient(to right, #4facfe, #00f2fe)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Enter Project Information
+          </h1>
+          <div
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {projectInfo.map((project, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  width: "100%",
+                  maxWidth: "500px",
+                }}
+              >
+                <input
+                  type="text"
+                  value={project.title}
+                  onChange={(e) =>
+                    handleProjectChangeInfo(index, "title", e.target.value)
+                  }
+                  placeholder={`Title ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={project.technology}
+                  onChange={(e) =>
+                    handleProjectChangeInfo(index, "technology", e.target.value)
+                  }
+                  placeholder={`Technology ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={project.date}
+                  onChange={(e) =>
+                    handleProjectChangeInfo(index, "date", e.target.value)
+                  }
+                  placeholder={`Date ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={project.description}
+                  onChange={(e) =>
+                    handleProjectChangeInfo(
+                      index,
+                      "description",
+                      e.target.value
+                    )
+                  }
+                  placeholder={`Description ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <button
+                  onClick={() => handleDeleteProjectDescription(index)}
+                  className="btn btn-primary btn-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={handleAddProjectInfo}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{
+                height: "60px",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              Add Project
+            </button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              <button
+                onClick={handlePreviousStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNextStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          {errorMessage && <p>{errorMessage}</p>}
         </div>
-      ))}
-      <button onClick={handleAddProjectInfo}>Add Project</button>
+      )}
 
-      {technicalInfo.map((technical, index) => (
-        <div key={index}>
-          <input
-            type="text"
-            value={technical.title}
-            onChange={(e) =>
-              handleTechnicalChangeInfo(index, "title", e.target.value)
-            }
-            placeholder={`Title ${index + 1}`}
-          />
-          <input
-            type="text"
-            value={technical.description}
-            onChange={(e) =>
-              handleTechnicalChangeInfo(index, "description", e.target.value)
-            }
-            placeholder={`Description ${index + 1}`}
-          />
-          <button onClick={() => handleDeleteTechnicalInfo(index)}>
-            Delete
-          </button>
+      {step === 5 && (
+        <div
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #003366, #367ff5)",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "4rem",
+              fontWeight: "bold",
+              color: "#fff",
+              backgroundImage: "linear-gradient(to right, #4facfe, #00f2fe)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Enter Technical Skills
+          </h1>
+          <div
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {technicalInfo.map((technical, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  width: "100%",
+                  maxWidth: "500px",
+                }}
+              >
+                <input
+                  type="text"
+                  value={technical.title}
+                  onChange={(e) =>
+                    handleTechnicalChangeInfo(index, "title", e.target.value)
+                  }
+                  placeholder={`Title ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <input
+                  type="text"
+                  value={technical.description}
+                  onChange={(e) =>
+                    handleTechnicalChangeInfo(
+                      index,
+                      "description",
+                      e.target.value
+                    )
+                  }
+                  placeholder={`Description ${index + 1}`}
+                  className="form-control mb-4 input-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                />
+                <button
+                  onClick={() => handleDeleteTechnicalInfo(index)}
+                  className="btn btn-primary btn-lg hover-effect"
+                  style={{
+                    height: "60px",
+                    width: "100%",
+                    marginBottom: "10px",
+                    maxWidth: "500px",
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={handleAddTechnicalInfo}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{
+                height: "60px",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              Add Technical Skill
+            </button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            >
+              <button
+                onClick={handlePreviousStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNextStep}
+                className="btn btn-primary btn-lg hover-effect"
+                style={{ height: "60px", width: "48%" }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          {errorMessage && <p>{errorMessage}</p>}
         </div>
-      ))}
-      <button onClick={handleAddTechnicalInfo}>Add Technical Skill</button>
+      )}
+
+      {step === 6 && (
+        <div
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #003366, #367ff5)",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "4rem",
+              fontWeight: "bold",
+              color: "#fff",
+              backgroundImage: "linear-gradient(to right, #4facfe, #00f2fe)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Enter Job Description
+          </h1>
+          <div
+            style={{
+              width: "60%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <input
+              type="text"
+              value={jobDescription}
+              onChange={(e) => handleJobDescriptionChange(e.target.value)}
+              placeholder="Enter job description"
+              className="form-control mb-4 input-lg hover-effect"
+              style={{
+                height: "60px",
+                width: "100%",
+                marginBottom: "10px",
+                maxWidth: "500px",
+              }}
+            />
+
+            <LoadingIndicator />
+
+            <button
+              onClick={handlePreviousStep}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{ height: "60px", width: "100%", marginBottom: "10px" }}
+            >
+              Previous
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{ height: "60px", width: "100%", marginBottom: "10px" }}
+            >
+              Submit
+            </button>
+            <button
+              onClick={createPDF}
+              disabled={!isGeneratePDFClickable}
+              className="btn btn-primary btn-lg hover-effect"
+              style={{ height: "60px", width: "100%", marginBottom: "10px" }}
+            >
+              Generate PDF
+            </button>
+          </div>
+          {errorMessage && <p>{errorMessage}</p>}
+        </div>
+      )}
 
       {errorMessage && <p>{errorMessage}</p>}
     </div>
